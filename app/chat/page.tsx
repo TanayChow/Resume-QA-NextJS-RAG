@@ -3,9 +3,11 @@
 
 import { Fragment, useState } from "react";
 import { useChat } from "@ai-sdk/react";
+import Link from "next/link";
 import {
   Conversation,
   ConversationContent,
+  ConversationEmptyState,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
@@ -15,9 +17,8 @@ import {
   type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
-  PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
-import { Toolbar } from "@/components/ai-elements/toolbar";
+import { KnowledgeBaseResults } from "@/components/ai-elements/knowledge-base-results";
 
 //This page utilizes the useChat hook, which will, by default, 
 // use the POST API route you created earlier (/api/chat). 
@@ -43,32 +44,50 @@ export default function RAGChatBot() {
       <div className="flex flex-col h-full">
         <Conversation className="h-full">
           <ConversationContent>
-            {messages.map((message) => (
-              <div key={message.id}>
-                {message.parts.map((part, i) => {
-                  switch (part.type) {
-                    case "text":
-                      return (
-                        <Fragment key={`${message.id}-${i}`}>
-                          <Message from={message.role}>
-                            <MessageContent>
-                              <MessageResponse>{part.text}</MessageResponse>
-                            </MessageContent>
-                          </Message>
-                        </Fragment>
-                      );
-                    case 'tool-searchKnowledgeBase':
+            {messages.length === 0 ? (
+              <ConversationEmptyState
+                title="Ask anything about your documents"
+                description="Upload a document first, then ask questions about its content."
+              >
+                <div className="space-y-1 text-center">
+                  <h3 className="font-medium text-sm">Ask anything about your documents</h3>
+                  <p className="text-muted-foreground text-sm">
+                    No documents yet?{" "}
+                    <Link href="/upload" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                      Upload one here
+                    </Link>
+                  </p>
+                </div>
+              </ConversationEmptyState>
+            ) : (
+              messages.map((message) => (
+                <div key={message.id}>
+                  {message.parts.map((part, i) => {
+                    switch (part.type) {
+                      case "text":
                         return (
-                        <pre key={`${message.id}-${i}`}>
-                            {JSON.stringify(part, null, 2)}
-                        </pre>
+                          <Fragment key={`${message.id}-${i}`}>
+                            <Message from={message.role}>
+                              <MessageContent>
+                                <MessageResponse>{part.text}</MessageResponse>
+                              </MessageContent>
+                            </Message>
+                          </Fragment>
                         );
-                    default:
-                      return null;
-                  }
-                })}
-              </div>
-            ))}
+                      case "tool-searchKnowledgeBase":
+                        return (
+                          <KnowledgeBaseResults
+                            key={`${message.id}-${i}`}
+                            output={part.state === "output-available" ? String(part.output) : ""}
+                          />
+                        );
+                      default:
+                        return null;
+                    }
+                  })}
+                </div>
+              ))
+            )}
             {(status === "submitted" || status === "streaming") && <span className="text-sm text-gray-500">Loading...</span>}
           </ConversationContent>
           <ConversationScrollButton />
