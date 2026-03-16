@@ -11,7 +11,7 @@ const tools = {
     execute: async ({ query }) => {
       try {
         // Search the vector database
-        const results = await searchSimilarDocuments(query, 3, 0.5);
+        const results = await searchSimilarDocuments(query, 3, 0.3);
         
         console.log("API Execute Search results:", results.length);
         
