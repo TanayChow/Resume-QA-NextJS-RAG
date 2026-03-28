@@ -1,4 +1,4 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a project to demostrate a simple pdf upload, parse, verctorize and store with susequent querying based on the embeddings. The frontend interface is based on React using ai-elements to create the conversation UX.  
 
 ## Getting Started
 
@@ -16,21 +16,36 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+User PDF
+   │
+   ▼
+[Parse] → pdf-parse extracts raw text
+   │
+   ▼
+[Chunk] → LangChain RecursiveCharacterTextSplitter splits into overlapping segments
+   │
+   ▼
+[Embed] → OpenAI text-embedding-3-small converts each chunk to a 1536-dim vector
+   │
+   ▼
+[Store] → Neon PostgreSQL (pgvector) stores content + embedding rows
+   │
+   ▼
+[Index] → HNSW index on the embedding column enables fast ANN search
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+User Question
+   │
+   ▼
+[Embed query] → same embedding model as ingestion
+   │
+   ▼
+[Cosine search] → find top-N most similar chunks from documents table
+   │
+   ▼
+[Inject as tool result] → LLM receives retrieved chunks as tool output
+   │
+   ▼
+[Stream response] → AI SDK streams answer back to the browser
+```
